@@ -1,0 +1,56 @@
+# Original script by Alejandro Soto
+# Modified by Francesco Mambretti
+# Modified by Alejandro on 04.03.24 LARGER SYSTEMS
+# 04/02/2023
+
+## general input ###############
+backend = CUDA
+backend_precision = mixed #uncomment when using CUDA
+fix_diffusion = 0
+back_in_box = 0
+use_edge = 1
+edge_n_forces = 1
+
+## simulation options #############
+sim_type = MD
+ensemble = nvt
+dt = 0.005
+verlet_skin = 0.3
+steps = 1e9
+thermostat = brownian #modified by Alejandro
+max_density_multiplier=5 
+diff_coeff = 1.
+T = 38 C
+newtonian_steps = 108
+interaction_type = DNA2
+salt_concentration = 0.1
+max_backbone_force = 5.
+use_average_seq = no
+seq_dep_file = /home/alejandrosoto/Documents/oxDNA/oxDNA2_sequence_dependent_parameters.txt #put your path here
+#external_forces = 1
+#external_forces_file = output_force.txt
+
+## input files ###########################################
+topology = topol.top
+conf_file = restart.dat
+
+## output files ###########################################
+lastconf_file = last_conf_MD.dat
+trajectory_file = trajectory_MD.dat
+log_file= relax.output
+refresh_vel = 1
+no_stdout_energy = 0
+restart_step_counter = 1
+energy_file = energy_file_md.txt
+print_conf_interval = 1e7
+print_energy_every = 1e5
+time_scale = linear
+
+data_output_1 = {
+    print_every = 1e5
+    name = hb_list.dat
+    col_1 = {
+        type = hb_list
+	only_count = True
+    }
+}
