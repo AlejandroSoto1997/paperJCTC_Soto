@@ -63,8 +63,8 @@ base_paths = {
     "L_4": "./L_4/hb",
     "L_7": "./L_7/hb",
     "L_11": "./L_11/hb",
-    "Y+L11": "./Y+L11/hb",
-    "Y+L0": "./Y+L0/hb",
+    #"Y+L11": "./Y+L11/hb",
+    #"Y+L0": "./Y+L0/hb",
     "Y": "./Y_0/hb"
 }
 
@@ -292,7 +292,7 @@ axs[0,1].set_xticks(list(custom_values.values()))
 axs[0,1].set_ylim(50, 70)
 axs[0,1].text(-0.04, 1.07, 'b)', transform=axs[0,1].transAxes,
               fontsize=12, fontweight='bold', va='top', ha='right')
-
+"""
 # ==============
 # Create a colorbar for the first set
 # ==============
@@ -315,7 +315,7 @@ cbar = fig.colorbar(sm, cax=cbar_ax, orientation='horizontal',
 cbar.ax.set_xticklabels(cleaned_labels)
 cbar.ax.tick_params(labelsize=7)
 cbar.set_label('Molecules')
-
+"""
 # ==============
 # 4) Experimental Data and Comparison
 # ==============
@@ -518,7 +518,7 @@ axs[1,1].set_ylim(50,70)
 axs[1,1].set_xlim(-1,17)
 axs[1,1].text(-0.04, 1.07, 'd)', transform=axs[1,1].transAxes,
               fontsize=12, fontweight='bold', va='top', ha='right')
-
+"""
 # Extra colorbar for the second set
 cmap_1 = mcolors.ListedColormap(colors_1)
 norm_1 = mcolors.BoundaryNorm(boundaries=np.arange(len(linkers) + 1) - 0.5,
@@ -533,6 +533,7 @@ cbar_1 = plt.colorbar(sm_1, cax=cbar_ax_1, orientation='horizontal',
 cbar_1.ax.set_xticklabels(linkers, fontsize=9)  # Change 10 to desired size
 # Set the size of the colorbar label
 cbar_1.set_label('Molecules', fontsize=10)
+"""
 plt.tight_layout()
 plt.savefig('figure_4.png', dpi=400)
 plt.show()
