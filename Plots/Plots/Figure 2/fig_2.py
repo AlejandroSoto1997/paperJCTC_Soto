@@ -67,7 +67,9 @@ marker_size = 10
 
 # Colores especificados
 colors = [
-"#313695", "#416aaf", "#74add1", "#c1e4ef", "#e9f6e8", "#fee99d", "#fdb567", "#f46d43", "#db382b", "#c6171b", "#7f0d0b"
+    "#313695", "#3c59a6", "#588cc0", "#74add1", "#a3d3e6", "#c1e4ef",
+    "#e9f6e8", "#fbfdc7", "#fee99d", "#fed283", "#fca55d", "#f67f4b",
+    "#e34933", "#ce2827", "#d73027", "#a50f15", "#7f0d0b"
 ][::-1]
 
 # Crear la figura con dos subplots en horizontal
@@ -167,7 +169,7 @@ name_original = df_tm_info_1['molecule_clean'].iloc[4]
 name_plot = custom_names.get(name_original, name_original)
 
 df1 = pd.read_csv(os.path.join(directory_bases_profiles_1, archivos_bases_profiles_1[3]))
-axs[0].plot(df1["Temperature(C)"], 1 - df1["Fraction of bases unpaired at equilibrium"], color=colors_1[0], label=custom_names["Y0"])
+axs[0].plot(df1["Temperature(C)"], 1 - df1["Fraction of bases unpaired at equilibrium"], color=colors_1[0], label=custom_names["Y0"],linestyle="--")
 
 df4 = pd.read_csv(os.path.join(directory_bases_profiles_1, archivos_bases_profiles_1[0]))
 axs[0].plot(df4["Temperature(C)"], 1 - df4["Fraction of bases unpaired at equilibrium"], color=colors_1[1], label=custom_names["L-4"])
@@ -221,23 +223,23 @@ axs[0].text(-0.04, 1.07, 'a)', transform=axs[0].transAxes, fontsize=12, fontweig
 # Configuración del zoom
 axins = axs[0].inset_axes([0.7, 0.58, 0.25, 0.25])  # (x0, y0, width, height) del panel secundario
 # Aplicar los colores a los plots
-axins.plot(df1["Temperature(C)"], df1["Fraction of bases unpaired at equilibrium"], color=colors_1[0])
+axins.plot(df1["Temperature(C)"], df1["Fraction of bases unpaired at equilibrium"], color=colors_1[0],linestyle="--")
 #axins.plot(df2["Temperature(C)"], df2["Fraction of bases unpaired at equilibrium"], color=colors_1[1])
 #axins.plot(df3["Temperature(C)"], df3["Fraction of bases unpaired at equilibrium"], color=colors_1[2])
-axins.plot(df4["Temperature(C)"], df4["Fraction of bases unpaired at equilibrium"], color=colors_1[3])
-axins.plot(df5["Temperature(C)"], df5["Fraction of bases unpaired at equilibrium"], color=colors_1[4])
-axins.plot(df6["Temperature(C)"], df6["Fraction of bases unpaired at equilibrium"], color=colors_1[5])
-axins.plot(df7["Temperature(C)"], df7["Fraction of bases unpaired at equilibrium"], color=colors_1[6])
-axins.plot(df8["Temperature(C)"], df8["Fraction of bases unpaired at equilibrium"], color=colors_1[7])
-axins.plot(df9["Temperature(C)"], df9["Fraction of bases unpaired at equilibrium"], color=colors_1[8])
-axins.plot(df10["Temperature(C)"], df10["Fraction of bases unpaired at equilibrium"], color=colors_1[9])
-axins.plot(df11["Temperature(C)"], df11["Fraction of bases unpaired at equilibrium"], color=colors_1[10])
-axins.plot(df12["Temperature(C)"], df12["Fraction of bases unpaired at equilibrium"], color=colors_1[11])
-axins.plot(df13["Temperature(C)"], df13["Fraction of bases unpaired at equilibrium"], color=colors_1[12])
-axins.plot(df14["Temperature(C)"], df14["Fraction of bases unpaired at equilibrium"], color=colors_1[13])
-axins.plot(df15["Temperature(C)"], df15["Fraction of bases unpaired at equilibrium"], color=colors_1[14])
-axins.plot(df16["Temperature(C)"], df16["Fraction of bases unpaired at equilibrium"], color=colors_1[15])
-axins.plot(df17["Temperature(C)"], df17["Fraction of bases unpaired at equilibrium"], color=colors_1[16])
+axins.plot(df4["Temperature(C)"], df4["Fraction of bases unpaired at equilibrium"], color=colors_1[1])
+axins.plot(df5["Temperature(C)"], df5["Fraction of bases unpaired at equilibrium"], color=colors_1[2])
+axins.plot(df6["Temperature(C)"], df6["Fraction of bases unpaired at equilibrium"], color=colors_1[3])
+axins.plot(df7["Temperature(C)"], df7["Fraction of bases unpaired at equilibrium"], color=colors_1[4])
+axins.plot(df8["Temperature(C)"], df8["Fraction of bases unpaired at equilibrium"], color=colors_1[5])
+axins.plot(df9["Temperature(C)"], df9["Fraction of bases unpaired at equilibrium"], color=colors_1[6])
+axins.plot(df10["Temperature(C)"], df10["Fraction of bases unpaired at equilibrium"], color=colors_1[7])
+axins.plot(df11["Temperature(C)"], df11["Fraction of bases unpaired at equilibrium"], color=colors_1[8])
+axins.plot(df12["Temperature(C)"], df12["Fraction of bases unpaired at equilibrium"], color=colors_1[9])
+axins.plot(df13["Temperature(C)"], df13["Fraction of bases unpaired at equilibrium"], color=colors_1[10])
+axins.plot(df14["Temperature(C)"], df14["Fraction of bases unpaired at equilibrium"], color=colors_1[11])
+axins.plot(df15["Temperature(C)"], df15["Fraction of bases unpaired at equilibrium"], color=colors_1[12])
+axins.plot(df16["Temperature(C)"], df16["Fraction of bases unpaired at equilibrium"], color=colors_1[13])
+axins.plot(df17["Temperature(C)"], df17["Fraction of bases unpaired at equilibrium"], color=colors_1[14])
 
 
 axins.set_xlim(52, 65)
@@ -245,7 +247,7 @@ axins.set_xlim(52, 65)
 axins.set_ylim(0.46, 0.54)
 axins.set_xticks(np.arange(52, 73, 8))
 axins.set_yticks(np.arange(0.46, 0.56, 0.04))
-axs[0].set_ylabel("Fraction unbounded", fontsize=12)
+axs[0].set_ylabel("$P\,(\mathrm{bound \,state})$", fontsize=12)
 axins.grid(True)
 
 # Cambiar el tamaño de la fuente de los ticks del gráfico de zoom
@@ -304,20 +306,26 @@ colors = [
 # Asignar colores a los puntos según el índice de orden
 assigned_colors = [colors[i % len(colors)] for i in range(len(df_tm_info_1))]
 
-# Crear el scatter plot con colores asignados
+# Primer punto con triángulo
 axs[1].scatter(
-    df_tm_info_1['nucleotides'], df_tm_info_1['Tm'],
-    marker='o', color=assigned_colors, s=150, edgecolor='black'
+    df_tm_info_1['nucleotides'].iloc[0], df_tm_info_1['Tm'].iloc[0],
+    marker='^', color=assigned_colors[0], s=150, edgecolor='black'
 )
 
+# Resto de los puntos con círculos
+axs[1].scatter(
+    df_tm_info_1['nucleotides'].iloc[1:], df_tm_info_1['Tm'].iloc[1:],
+    marker='o', color=assigned_colors[1:], s=150, edgecolor='black'
+)
+"""
 # Añadir etiquetas de datos (Tm) a cada punto con posición controlada
 for i, txt in enumerate(df_tm_info_1['Tm']):
     x = df_tm_info_1['nucleotides'][i]
     y = df_tm_info_1['Tm'][i]
     axs[1].text(x + 0.03, y + 0.39, f'{txt:.1f}', fontsize=9, ha='center', va='bottom')
-
+"""
 # Configurar los ejes y apariencia
-axs[1].set_xlabel('Length sticky end (no. nucleotides)', fontsize=12)
+axs[1].set_xlabel('$n_{\mathrm{tail}}$', fontsize=12)
 axs[1].set_xticks(np.arange(0, 17, 1))  # Especificar los ticks del eje x
 axs[1].tick_params(axis='both', which='major', labelsize=10)
 axs[1].set_ylim(50, 70)
