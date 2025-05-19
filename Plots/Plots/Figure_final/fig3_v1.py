@@ -35,6 +35,8 @@ from scipy.interpolate import interp1d
 import scienceplots
 import matplotlib.colors as mcolors
 import matplotlib.cm as cm
+import matplotlib.lines as mlines
+from matplotlib.lines import Line2D
 
 
 plt.style.use(['science', 'no-latex', 'bright'])
@@ -119,12 +121,12 @@ plt.rcParams.update({
     'axes.labelsize': 10,
     'xtick.labelsize': 10,
     'ytick.labelsize': 10,
-    'legend.fontsize': 8,
+    'legend.fontsize': 10,
 })
 
 marker_size = 10
 
-fig = plt.figure(figsize=(9, 9))
+fig = plt.figure(figsize=(6, 6))
 #grid = plt.GridSpec(3, 2, hspace=0.4, wspace=0.3)
 grid = plt.GridSpec(1, 1)
 
@@ -409,13 +411,15 @@ for i, (linker, col_indices) in enumerate(columns_of_interest.items()):
     interp_func = interp1d(avg_absorbance, temp_range, bounds_error=False, fill_value='extrapolate')
     temperature_at_05 = interp_func(0.5)
     fusion_temperatures.append((sticky_end_lengths[linker], temperature_at_05))
-
+    #df_fusion = pd.DataFrame(fusion_temperatures, columns=["nucleotides", "Tm"])
+    #df_fusion["error"] = error_bars
     # Error = diff en calentamiento vs enfriamiento
     temp_h_05 = interp_func(0.5)
     temp_c_05 = interp1d(df_c[f'Absorbance_Norm_{linker}_c'], df_c[temp_c_col],
                          bounds_error=False, fill_value='extrapolate')(0.5)
     error_bars.append(abs(temp_h_05 - temp_c_05))
-    
+df_fusion = pd.DataFrame(fusion_temperatures, columns=["nucleotides", "Tm"])
+df_fusion["error"] = error_bars   
 
 """
     # Plot experimental average
@@ -758,19 +762,99 @@ df_tm_info_1 = excluir_filas(df_tm_info_1, excluir_indices=indices_a_excluir)
 
 
 # Asignar colores a los puntos según el índice de orden
-assigned_colors = [colors[i % len(colors)] for i in range(len(df_tm_info_1))]
+#assigned_colors = [colors[i % len(colors)] for i in range(len(df_tm_info_1))]
 
 ax4 = fig.add_subplot(grid[0, 0]) 
 
+
+
+#experimental scatter
+"""
 for i, (length, temp) in enumerate(fusion_temperatures):
     ax4.errorbar(
         length, temp, yerr=error_bars[i],
-        fmt='o', color=colors_1[i],
+        fmt='s', color=colors_1[i],
         markeredgecolor='black', capsize=5
     )
+"""
+
+df_fusion['Tm'] = df_fusion['Tm'].apply(pd.to_numeric, errors='coerce').dropna().reset_index(drop=True)
+
+
+colors_exp = [
+    "#3c59a6",  # LS12
+    "#4b7db8",  # LS11
+    "#659bc8",  # LS10
+    "#83b9d8",  # LS9
+    "#a3d3e6",  # LS8
+    "#fffbb9",  # LS7
+    "#fee090",  # LS6
+    "#549F8B"   # Y
+]
+
+df_fusion["color"] = colors_exp
+
+
+# Graficar puntos de colores con scatter
+ax4.scatter(
+    df_fusion['nucleotides'],
+    df_fusion['Tm'],
+    color=df_fusion['color'],
+    edgecolor='black',
+    marker='s',
+    s=50,
+    label='Experimental'
+)
+
+# Agregar barras de error con el mismo color para cada punto
+for i in range(len(df_fusion)):
+    ax4.errorbar(
+        df_fusion['nucleotides'].iloc[i],
+        df_fusion['Tm'].iloc[i],
+        yerr=df_fusion['error'].iloc[i],
+        fmt='none',
+        ecolor=df_fusion['color'].iloc[i],
+        capsize=5,
+        linewidth=2,
+        #ecolor='black',
+        elinewidth=1.5,
+
+    )
+"""
+# Opcional: agregar etiquetas numéricas sin bucles
+for x, y in zip(df_fusion['nucleotides'], df_fusion['Tm']):
+    ax4.text(x, y + 0.6, f'{y:.1f}°C', fontsize=9, ha='center')
+"""
+
+"""
+fusion_labels = ['LS12', 'LS11', 'LS10', 'LS9', 'LS8', 'LS7', 'LS6', 'Y']
+
+# Orden explícito que corresponde a colors_1 y fusion_labels:
+correct_order = ['Y','LS12', 'LS11', 'LS10', 'LS9', 'LS8', 'LS7', 'LS6']
+
+# Asumimos que fusion_labels está generado en este orden.
+for i, linker in enumerate(correct_order):
+    row = df_fusion.iloc[i]
+    length, temp, error = row['nucleotides'], row['Tm'], row['error']
+
+    ax4.errorbar(
+        length, temp, yerr=error,
+        fmt='s', color=colors_1[i],
+        markeredgecolor='black', capsize=5,
+        label=linker
+    )
+
+    ax4.text(
+        length, temp + 0.6,
+        f'{temp:.1f}C',
+        fontsize=9, ha='center', va='bottom', color=colors_1[i]
+    )
+
+"""
+#simulation scatter
 
 #ax2 = fig.add_subplot(grid[0, 1])
-
+#simualtion
 for i, (label, color) in enumerate(zip(labels, colors)):
     x_value = custom_values.get(label, 0)  # fallback if not in dict
     ax4.errorbar(
@@ -780,9 +864,11 @@ for i, (label, color) in enumerate(zip(labels, colors)):
         fmt='o',
         color=color,
         markeredgecolor='k',
-        capsize=5
+        capsize=5,
+        markersize=8,
+        label='Unbias' if i == 0 else None
     )
-    
+
 
 colors_1 = ["#549F8B",
 "#313695", "#3c59a6", "#4b7db8", "#659bc8", "#83b9d8", "#a3d3e6", "#fffbb9", "#fee090", "#fdb567", "#f67f4b", "#e34933", "#c01a27", "#c6171b", "#7f0d0b"
@@ -836,23 +922,26 @@ columns_of_interest = {
 fusion_temperatures = []
 error_bars = []
 
-
-
-
+#nupack
 # Asignar colores a los puntos según el índice de orden
 #assigned_colors = [colors[i % len(colors)] for i in range(len(df_tm_info_1))]
+colors_1 = ["#549F8B",
+"#313695", "#3c59a6", "#4b7db8", "#659bc8", "#83b9d8", "#a3d3e6", "#fffbb9", "#fee090", "#fdb567", "#f67f4b", "#e34933", "#c01a27", "#c6171b", "#7f0d0b"
+]
 
 # Primer punto con triángulo
 ax4.scatter(
     df_tm_info_1['nucleotides'].iloc[0], df_tm_info_1['Tm'].iloc[0],
-    marker='^', color=assigned_colors[0], s=30, edgecolor='black'
+    marker='^', color=colors_1[0], s=50, edgecolor='black'
 )
 
 # Resto de los puntos con círculos
 ax4.scatter(
     df_tm_info_1['nucleotides'].iloc[1:], df_tm_info_1['Tm'].iloc[1:],
-    marker='^', color=assigned_colors[1:], s=30, edgecolor='black'
+    marker='^', color=colors_1[1:], s=50, edgecolor='black'
+    ,label="NUPACK"
 )
+
 
 # Configurar los ejes y apariencia
 ax4.set_xlabel('$n_{\mathrm{tail}}$', fontsize=12)
@@ -860,10 +949,28 @@ ax4.set_xticks(np.arange(0, 17, 1))  # Especificar los ticks del eje x
 ax4.tick_params(axis='both', which='major', labelsize=10)
 ax4.set_ylim(50, 70)
 ax4.set_ylabel('Melting temperature $T_{m}$ $(^{o}C)$', fontsize=12)
-ax4.text(-0.04, 1.07, 'b)', transform=ax4.transAxes, fontsize=12, fontweight='bold', va='top', ha='right')
-labels = list(custom_names.values())
+#ax4.text(-0.04, 1.07, 'b)', transform=ax4.transAxes, fontsize=12, fontweight='bold', va='top', ha='right')
 
 
+labels = ["NUPACK","Experimental","Simulation"]
+# Define los mismos nombres de las series que ya tienes
+legend_labels = labels  # Asegúrate de que esta lista tenga los textos correctos
+
+
+marker_types = ['^', 's', 'o'] 
+
+# Crea elementos de leyenda en escala de grises
+legend_handles = [
+    Line2D(
+        [], [], marker=marker_types[i], linestyle='None',
+        markerfacecolor='black', markeredgecolor='black',
+        color='gray', markersize=8, label=legend_labels[i]
+    )
+    for i in range(len(legend_labels))
+]
+
+# Agrega la leyenda personalizada
+ax4.legend(handles=legend_handles, loc='lower left')
 
 #plt.tight_layout()
 plt.savefig('figure_4.png', dpi=400)
