@@ -56,9 +56,222 @@ marker_size = 10
 fig = plt.figure(figsize=(12, 4))
 grid = plt.GridSpec(1, 3, wspace=0.08)
 #fig.subplots_adjust(left=0.8)
+colors_1 = ["#549F8B",
+"#313695", "#3c59a6", "#4b7db8", "#659bc8", "#83b9d8", "#a3d3e6", "#fffbb9", "#fee090", "#fdb567", "#f67f4b", "#e34933", "#c01a27", "#c6171b", "#7f0d0b"
+]
+
+colors_1 = [
+    colors_1[2],  # LS12
+    colors_1[3],  # LS11
+    colors_1[4],  # LS10
+    colors_1[5],  # LS9
+    colors_1[6],  # LS8
+    colors_1[7],  # LS7
+    colors_1[8],  # LS6
+    colors_1[0]   # Y
+]
+
+#linkers = ['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6','Y']
+linkers = ['LS12', 'LS11', 'LS10', 'LS9', 'LS8', 'LS7', 'LS6','Y']
+
+sticky_end_lengths = {
+    'LS12': 12,
+    'LS11': 11,
+    'LS10': 10,
+    'LS9': 9,
+    'LS8': 8,
+    'LS7': 7,
+    'LS6': 6,
+    'Y': 12
+}
+
+df_L0_L1 = pd.read_csv("L0_L1.csv")
+df_L2_L3 = pd.read_csv("L2_L3.csv")
+df_YL1_L4_L5_L6 = pd.read_csv("YL1_L4_L5_L6.csv")
+
+# Convert to numeric
+df_L0_L1 = df_L0_L1.apply(pd.to_numeric, errors='coerce').dropna().reset_index(drop=True)
+df_L2_L3 = df_L2_L3.apply(pd.to_numeric, errors='coerce').dropna().reset_index(drop=True)
+df_YL1_L4_L5_L6 = df_YL1_L4_L5_L6.apply(pd.to_numeric, errors='coerce').dropna().reset_index(drop=True)
+
+columns_of_interest = {
+    'LS12': {'h': (0, 1), 'c': (2, 3)},
+    'LS11': {'h': (12, 13), 'c': (14, 15)},
+    'LS10': {'h': (0, 1), 'c': (2, 3)},
+    'LS9': {'h': (12, 13), 'c': (14, 15)},
+    'LS8': {'h': (8, 9), 'c': (10, 11)},
+    'LS7': {'h': (20, 21), 'c': (22, 23)},
+    'LS6': {'h': (24, 25), 'c': (26, 27)},
+    'Y':  {'h': (0, 1), 'c': (2, 3)},
+}
+
+fusion_temperatures = []
+error_bars = []
+
+ax2 = fig.add_subplot(grid[0, 0])
+# ==============
+# Plot 2 (bottom-left, ax2)
+# ==============
+for i, (linker, col_indices) in enumerate(columns_of_interest.items()):
+    # (1) Calentamiento
+    if linker in ['LS12', 'LS11']:
+        df_selected = df_L0_L1[[df_L0_L1.columns[col_indices['h'][0]],
+                                df_L0_L1.columns[col_indices['h'][1]]]]
+    elif linker in ['LS10', 'LS9']:
+        df_selected = df_L2_L3[[df_L2_L3.columns[col_indices['h'][0]],
+                                df_L2_L3.columns[col_indices['h'][1]]]]
+    else:
+        df_selected = df_YL1_L4_L5_L6[[df_YL1_L4_L5_L6.columns[col_indices['h'][0]],
+                                       df_YL1_L4_L5_L6.columns[col_indices['h'][1]]]]
+
+    temp_h_col, abs_h_col = df_selected.columns[0], df_selected.columns[1]
+    df_h = df_selected.apply(pd.to_numeric, errors='coerce')
+    
+    # (2) Enfriamiento
+    if linker in ['LS12', 'LS11']:
+        df_selected_c = df_L0_L1[[df_L0_L1.columns[col_indices['c'][0]],
+                                  df_L0_L1.columns[col_indices['c'][1]]]]
+    elif linker in ['LS10', 'LS9']:
+        df_selected_c = df_L2_L3[[df_L2_L3.columns[col_indices['c'][0]],
+                                  df_L2_L3.columns[col_indices['c'][1]]]]
+    else:
+        df_selected_c = df_YL1_L4_L5_L6[[df_YL1_L4_L5_L6.columns[col_indices['c'][0]],
+                                         df_YL1_L4_L5_L6.columns[col_indices['c'][1]]]]
+
+    temp_c_col, abs_c_col = df_selected_c.columns[0], df_selected_c.columns[1]
+    df_c = df_selected_c.apply(pd.to_numeric, errors='coerce')
+    df_c = df_c.iloc[::-1].reset_index(drop=True)
+
+    # Normalización
+    min_h = df_h[abs_h_col].min()
+    max_h = df_h[abs_h_col].max()
+    min_c = df_c[abs_c_col].min()
+    max_c = df_c[abs_c_col].max()
+
+    df_h[f'Absorbance_Norm_{linker}_h'] = 1 - (df_h[abs_h_col] - min_h) / (max_h - min_h)
+    df_c[f'Absorbance_Norm_{linker}_c'] = 1 - (df_c[abs_c_col] - min_c) / (max_c - min_c)
+
+    # Promedio entre calentamiento y enfriamiento
+    min_len = min(len(df_h[temp_h_col]), len(df_c[temp_c_col]))
+    temp_range = df_h[temp_h_col].iloc[:min_len]
+    avg_absorbance = (df_h[f'Absorbance_Norm_{linker}_h'].iloc[:min_len] +
+                      df_c[f'Absorbance_Norm_{linker}_c'].iloc[:min_len]) / 2
+
+    # Tm => fracción 0.5
+    interp_func = interp1d(avg_absorbance, temp_range, bounds_error=False, fill_value='extrapolate')
+    temperature_at_05 = interp_func(0.5)
+    fusion_temperatures.append((sticky_end_lengths[linker], temperature_at_05))
+
+    # Error = diff en calentamiento vs enfriamiento
+    temp_h_05 = interp_func(0.5)
+    temp_c_05 = interp1d(df_c[f'Absorbance_Norm_{linker}_c'], df_c[temp_c_col],
+                         bounds_error=False, fill_value='extrapolate')(0.5)
+    error_bars.append(abs(temp_h_05 - temp_c_05))
+    
 
 
-ax3 = fig.add_subplot(grid[0,0])
+    # Plot experimental average
+    ax2.plot(
+        temp_range, avg_absorbance, '-',
+        color=colors_1[i],
+        label=f'{linker}'
+    )
+    ax2.fill_between(
+        df_h[temp_h_col],
+        df_h[f'Absorbance_Norm_{linker}_h'],
+        df_c[f'Absorbance_Norm_{linker}_c'],
+        color=colors_1[i], alpha=0.6
+    )
+
+handles, labels = ax2.get_legend_handles_labels()
+ax2.legend(handles[::-1], labels[::-1], loc='lower left', fontsize=8)
+ax2.set_xlabel('Temperature ($^{o}$C)', fontsize=12)
+ax2.set_ylabel('')
+
+ax2.set_ylabel(
+    r"a)Normalized absorbance @ 260 nm" + "\n" +
+    "b) $P\,(\mathrm{bound \,state})$" + "\n" +
+    "c) Fraction bounded",
+    fontsize=12
+)
+#ax2.set_yticks([])
+#ax2.set_ylabel('Normalized absorbance @ 260 nm')
+
+"""
+ax2.text(75, 1, '100 mM NaCl',  
+              fontsize=10, color='black', ha='left', va='top', 
+              bbox=dict(boxstyle='square,pad=0.1', facecolor='white',
+                        edgecolor='none', alpha=0.1))
+ax2.text(75, 0.97, r'$\approx 1 \ \mu\mathrm{M}$',  
+              fontsize=10, color='black', ha='left', va='top', 
+              bbox=dict(boxstyle='square,pad=0.1', facecolor='white',
+                        edgecolor='none', alpha=0.1))
+"""
+ax2.set_xlim(10,100)
+ax2.set_xticks(np.arange(10, 110, 10))
+# Agregar la línea horizontal
+ax2.axhline(y=0.5, color='black', alpha=0.4, linestyle='--', linewidth=1, xmin=0, xmax=1)
+ax2.text(-0.02, 1.08, 'a)', transform=ax2.transAxes,
+              fontsize=12, fontweight='bold', va='top', ha='right')
+
+# Zoom inset on the experimental data
+axins2 = ax2.inset_axes([0.7, 0.7, 0.25, 0.25])
+for i, (linker, col_indices) in enumerate(columns_of_interest.items()):
+    if linker in ['LS12', 'LS11']:
+        df_selected = df_L0_L1[[df_L0_L1.columns[col_indices['h'][0]],
+                                df_L0_L1.columns[col_indices['h'][1]]]]
+    elif linker in ['LS10', 'LS9']:
+        df_selected = df_L2_L3[[df_L2_L3.columns[col_indices['h'][0]],
+                                df_L2_L3.columns[col_indices['h'][1]]]]
+    else:
+        df_selected = df_YL1_L4_L5_L6[[df_YL1_L4_L5_L6.columns[col_indices['h'][0]],
+                                       df_YL1_L4_L5_L6.columns[col_indices['h'][1]]]]
+
+    temp_h_col, abs_h_col = df_selected.columns[0], df_selected.columns[1]
+    df_h = df_selected.apply(pd.to_numeric, errors='coerce')
+
+    if linker in ['LS12', 'LS11']:
+        df_selected_c = df_L0_L1[[df_L0_L1.columns[col_indices['c'][0]],
+                                  df_L0_L1.columns[col_indices['c'][1]]]]
+    elif linker in ['LS10', 'LS9']:
+        df_selected_c = df_L2_L3[[df_L2_L3.columns[col_indices['c'][0]],
+                                  df_L2_L3.columns[col_indices['c'][1]]]]
+    else:
+        df_selected_c = df_YL1_L4_L5_L6[[df_YL1_L4_L5_L6.columns[col_indices['c'][0]],
+                                         df_YL1_L4_L5_L6.columns[col_indices['c'][1]]]]
+
+    temp_c_col, abs_c_col = df_selected_c.columns[0], df_selected_c.columns[1]
+    df_c = df_selected_c.apply(pd.to_numeric, errors='coerce')
+    df_c = df_c.iloc[::-1].reset_index(drop=True)
+
+    min_h = df_h[abs_h_col].min()
+    max_h = df_h[abs_h_col].max()
+    min_c = df_c[abs_c_col].min()
+    max_c = df_c[abs_c_col].max()
+
+    df_h[f'Absorbance_Norm_{linker}_h'] = (df_h[abs_h_col] - min_h) / (max_h - min_h)
+    df_c[f'Absorbance_Norm_{linker}_c'] = (df_c[abs_c_col] - min_c) / (max_c - min_c)
+
+    min_len = min(len(df_h[temp_h_col]), len(df_c[temp_c_col]))
+    temp_range = df_h[temp_h_col].iloc[:min_len]
+    avg_absorbance = (df_h[f'Absorbance_Norm_{linker}_h'].iloc[:min_len] +
+                      df_c[f'Absorbance_Norm_{linker}_c'].iloc[:min_len]) / 2
+
+    axins2.plot(temp_range, avg_absorbance, '-', color=colors_1[i], alpha=1)
+    
+
+#ax2.indicate_inset_zoom(axins)
+#axins2.indicate_inset_zoom(ax2, edgecolor="black")
+
+axins2.set_xlim(50, 68)
+axins2.set_xticks(np.arange(50, 72, 8))
+axins2.set_ylim(0.4, 0.6)
+axins2.set_yticks(np.arange(0.4, 0.7, 0.1))
+axins2.grid(True)
+ax2.indicate_inset_zoom(axins2)
+
+
+ax3 = fig.add_subplot(grid[0,1])
 
 def shuffled_sterr(_in):
     _chunk = 20
@@ -247,7 +460,7 @@ bounds = np.arange(len(colors_1) + 1)
 norm = mcolors.BoundaryNorm(bounds, cmap.N)
 
 # Crear el eje para la barra de colores
-cbar_ax = fig.add_axes([0.315, 0.2, 0.025, 0.6])  # [left, bottom, width, height]
+cbar_ax = fig.add_axes([0.58, 0.2, 0.025, 0.6])  # [left, bottom, width, height]
 
 # Crear la colorbar
 cb = mcolorbar.ColorbarBase(
@@ -266,7 +479,7 @@ labels = ["Y",
 cb.ax.set_yticklabels(labels[::1])
 cb.ax.tick_params(labelsize=8)
 
-ax3.text(-0.04, 1.09, 'a)', transform=ax3.transAxes, fontsize=12, fontweight='bold', va='top', ha='right')
+ax3.text(-0.04, 1.09, 'b)', transform=ax3.transAxes, fontsize=12, fontweight='bold', va='top', ha='right')
 
 # Configuración del zoom
 axins = ax3.inset_axes([0.15, 0.1, 0.25, 0.25])  # (x0, y0, width, height) del panel secundario
@@ -293,12 +506,7 @@ axins.set_xlim(52, 65)
 axins.set_ylim(0.46, 0.54)
 axins.set_xticks(np.arange(52, 73, 8))
 axins.set_yticks(np.arange(0.46, 0.56, 0.04))
-ax3.set_ylabel(
-    r"a )$P\,(\mathrm{bound \,state})$" + "\n" +
-    "b) Normalized absorbance @ 260 nm" + "\n" +
-    "c) Fraction bounded",
-    fontsize=12
-)
+
 #ax2.set_ylabel('Normalized absorbance @ 260 nm')
 #ax1.set_ylabel("Fraction unbounded", fontsize=10)
 
@@ -319,6 +527,7 @@ ax3.set_xticks(np.arange(10, 110, 10))
 ax3.set_xlabel('Temperature ($^{o}$C)', fontsize=12)
 ax3.axhline(y=0.5, color='black', alpha=0.4, linestyle='--', linewidth=1, xmin=0, xmax=0.7)
 #ax3.legend().remove()
+ax3.set_yticks([])
 #ax3.tick_params(axis='y', which='both', left=True, right=True, labelleft=False, labelright=False)
 """
 #ax3.set_ylabel('Fraction unbounded', fontsize=12)
@@ -399,208 +608,9 @@ custom_values = {
     #"#fca55d", "#e34933", "#d73027", "#7f0d0b"
 #][::-1]
 
-colors_1 = [
-    colors_1[2],  # LS12
-    colors_1[3],  # LS11
-    colors_1[4],  # LS10
-    colors_1[5],  # LS9
-    colors_1[6],  # LS8
-    colors_1[7],  # LS7
-    colors_1[8],  # LS6
-    colors_1[0]   # Y
-]
-
-#linkers = ['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6','Y']
-linkers = ['LS12', 'LS11', 'LS10', 'LS9', 'LS8', 'LS7', 'LS6','Y']
-
-sticky_end_lengths = {
-    'LS12': 12,
-    'LS11': 11,
-    'LS10': 10,
-    'LS9': 9,
-    'LS8': 8,
-    'LS7': 7,
-    'LS6': 6,
-    'Y': 12
-}
-
-df_L0_L1 = pd.read_csv("L0_L1.csv")
-df_L2_L3 = pd.read_csv("L2_L3.csv")
-df_YL1_L4_L5_L6 = pd.read_csv("YL1_L4_L5_L6.csv")
-
-# Convert to numeric
-df_L0_L1 = df_L0_L1.apply(pd.to_numeric, errors='coerce').dropna().reset_index(drop=True)
-df_L2_L3 = df_L2_L3.apply(pd.to_numeric, errors='coerce').dropna().reset_index(drop=True)
-df_YL1_L4_L5_L6 = df_YL1_L4_L5_L6.apply(pd.to_numeric, errors='coerce').dropna().reset_index(drop=True)
-
-columns_of_interest = {
-    'LS12': {'h': (0, 1), 'c': (2, 3)},
-    'LS11': {'h': (12, 13), 'c': (14, 15)},
-    'LS10': {'h': (0, 1), 'c': (2, 3)},
-    'LS9': {'h': (12, 13), 'c': (14, 15)},
-    'LS8': {'h': (8, 9), 'c': (10, 11)},
-    'LS7': {'h': (20, 21), 'c': (22, 23)},
-    'LS6': {'h': (24, 25), 'c': (26, 27)},
-    'Y':  {'h': (0, 1), 'c': (2, 3)},
-}
-
-fusion_temperatures = []
-error_bars = []
 
 
-ax2 = fig.add_subplot(grid[0, 1])
-# ==============
-# Plot 2 (bottom-left, ax2)
-# ==============
-for i, (linker, col_indices) in enumerate(columns_of_interest.items()):
-    # (1) Calentamiento
-    if linker in ['LS12', 'LS11']:
-        df_selected = df_L0_L1[[df_L0_L1.columns[col_indices['h'][0]],
-                                df_L0_L1.columns[col_indices['h'][1]]]]
-    elif linker in ['LS10', 'LS9']:
-        df_selected = df_L2_L3[[df_L2_L3.columns[col_indices['h'][0]],
-                                df_L2_L3.columns[col_indices['h'][1]]]]
-    else:
-        df_selected = df_YL1_L4_L5_L6[[df_YL1_L4_L5_L6.columns[col_indices['h'][0]],
-                                       df_YL1_L4_L5_L6.columns[col_indices['h'][1]]]]
 
-    temp_h_col, abs_h_col = df_selected.columns[0], df_selected.columns[1]
-    df_h = df_selected.apply(pd.to_numeric, errors='coerce')
-    
-    # (2) Enfriamiento
-    if linker in ['LS12', 'LS11']:
-        df_selected_c = df_L0_L1[[df_L0_L1.columns[col_indices['c'][0]],
-                                  df_L0_L1.columns[col_indices['c'][1]]]]
-    elif linker in ['LS10', 'LS9']:
-        df_selected_c = df_L2_L3[[df_L2_L3.columns[col_indices['c'][0]],
-                                  df_L2_L3.columns[col_indices['c'][1]]]]
-    else:
-        df_selected_c = df_YL1_L4_L5_L6[[df_YL1_L4_L5_L6.columns[col_indices['c'][0]],
-                                         df_YL1_L4_L5_L6.columns[col_indices['c'][1]]]]
-
-    temp_c_col, abs_c_col = df_selected_c.columns[0], df_selected_c.columns[1]
-    df_c = df_selected_c.apply(pd.to_numeric, errors='coerce')
-    df_c = df_c.iloc[::-1].reset_index(drop=True)
-
-    # Normalización
-    min_h = df_h[abs_h_col].min()
-    max_h = df_h[abs_h_col].max()
-    min_c = df_c[abs_c_col].min()
-    max_c = df_c[abs_c_col].max()
-
-    df_h[f'Absorbance_Norm_{linker}_h'] = 1 - (df_h[abs_h_col] - min_h) / (max_h - min_h)
-    df_c[f'Absorbance_Norm_{linker}_c'] = 1 - (df_c[abs_c_col] - min_c) / (max_c - min_c)
-
-    # Promedio entre calentamiento y enfriamiento
-    min_len = min(len(df_h[temp_h_col]), len(df_c[temp_c_col]))
-    temp_range = df_h[temp_h_col].iloc[:min_len]
-    avg_absorbance = (df_h[f'Absorbance_Norm_{linker}_h'].iloc[:min_len] +
-                      df_c[f'Absorbance_Norm_{linker}_c'].iloc[:min_len]) / 2
-
-    # Tm => fracción 0.5
-    interp_func = interp1d(avg_absorbance, temp_range, bounds_error=False, fill_value='extrapolate')
-    temperature_at_05 = interp_func(0.5)
-    fusion_temperatures.append((sticky_end_lengths[linker], temperature_at_05))
-
-    # Error = diff en calentamiento vs enfriamiento
-    temp_h_05 = interp_func(0.5)
-    temp_c_05 = interp1d(df_c[f'Absorbance_Norm_{linker}_c'], df_c[temp_c_col],
-                         bounds_error=False, fill_value='extrapolate')(0.5)
-    error_bars.append(abs(temp_h_05 - temp_c_05))
-    
-
-
-    # Plot experimental average
-    ax2.plot(
-        temp_range, avg_absorbance, '-',
-        color=colors_1[i],
-        label=f'{linker}'
-    )
-    ax2.fill_between(
-        df_h[temp_h_col],
-        df_h[f'Absorbance_Norm_{linker}_h'],
-        df_c[f'Absorbance_Norm_{linker}_c'],
-        color=colors_1[i], alpha=0.6
-    )
-
-ax2.legend(loc='lower left',fontsize=8)
-ax2.set_xlabel('Temperature ($^{o}$C)', fontsize=12)
-ax2.set_ylabel('')
-ax2.set_yticks([])
-#ax2.set_ylabel('Normalized absorbance @ 260 nm')
-
-"""
-ax2.text(75, 1, '100 mM NaCl',  
-              fontsize=10, color='black', ha='left', va='top', 
-              bbox=dict(boxstyle='square,pad=0.1', facecolor='white',
-                        edgecolor='none', alpha=0.1))
-ax2.text(75, 0.97, r'$\approx 1 \ \mu\mathrm{M}$',  
-              fontsize=10, color='black', ha='left', va='top', 
-              bbox=dict(boxstyle='square,pad=0.1', facecolor='white',
-                        edgecolor='none', alpha=0.1))
-"""
-ax2.set_xlim(10,100)
-ax2.set_xticks(np.arange(10, 110, 10))
-# Agregar la línea horizontal
-ax2.axhline(y=0.5, color='black', alpha=0.4, linestyle='--', linewidth=1, xmin=0.48, xmax=1)
-ax2.text(-0.02, 1.08, 'b)', transform=ax2.transAxes,
-              fontsize=12, fontweight='bold', va='top', ha='right')
-
-# Zoom inset on the experimental data
-axins2 = ax2.inset_axes([0.7, 0.7, 0.25, 0.25])
-for i, (linker, col_indices) in enumerate(columns_of_interest.items()):
-    if linker in ['LS12', 'LS11']:
-        df_selected = df_L0_L1[[df_L0_L1.columns[col_indices['h'][0]],
-                                df_L0_L1.columns[col_indices['h'][1]]]]
-    elif linker in ['LS10', 'LS9']:
-        df_selected = df_L2_L3[[df_L2_L3.columns[col_indices['h'][0]],
-                                df_L2_L3.columns[col_indices['h'][1]]]]
-    else:
-        df_selected = df_YL1_L4_L5_L6[[df_YL1_L4_L5_L6.columns[col_indices['h'][0]],
-                                       df_YL1_L4_L5_L6.columns[col_indices['h'][1]]]]
-
-    temp_h_col, abs_h_col = df_selected.columns[0], df_selected.columns[1]
-    df_h = df_selected.apply(pd.to_numeric, errors='coerce')
-
-    if linker in ['LS12', 'LS11']:
-        df_selected_c = df_L0_L1[[df_L0_L1.columns[col_indices['c'][0]],
-                                  df_L0_L1.columns[col_indices['c'][1]]]]
-    elif linker in ['LS10', 'LS9']:
-        df_selected_c = df_L2_L3[[df_L2_L3.columns[col_indices['c'][0]],
-                                  df_L2_L3.columns[col_indices['c'][1]]]]
-    else:
-        df_selected_c = df_YL1_L4_L5_L6[[df_YL1_L4_L5_L6.columns[col_indices['c'][0]],
-                                         df_YL1_L4_L5_L6.columns[col_indices['c'][1]]]]
-
-    temp_c_col, abs_c_col = df_selected_c.columns[0], df_selected_c.columns[1]
-    df_c = df_selected_c.apply(pd.to_numeric, errors='coerce')
-    df_c = df_c.iloc[::-1].reset_index(drop=True)
-
-    min_h = df_h[abs_h_col].min()
-    max_h = df_h[abs_h_col].max()
-    min_c = df_c[abs_c_col].min()
-    max_c = df_c[abs_c_col].max()
-
-    df_h[f'Absorbance_Norm_{linker}_h'] = (df_h[abs_h_col] - min_h) / (max_h - min_h)
-    df_c[f'Absorbance_Norm_{linker}_c'] = (df_c[abs_c_col] - min_c) / (max_c - min_c)
-
-    min_len = min(len(df_h[temp_h_col]), len(df_c[temp_c_col]))
-    temp_range = df_h[temp_h_col].iloc[:min_len]
-    avg_absorbance = (df_h[f'Absorbance_Norm_{linker}_h'].iloc[:min_len] +
-                      df_c[f'Absorbance_Norm_{linker}_c'].iloc[:min_len]) / 2
-
-    axins2.plot(temp_range, avg_absorbance, '-', color=colors_1[i], alpha=1)
-    
-
-#ax2.indicate_inset_zoom(axins)
-#axins2.indicate_inset_zoom(ax2, edgecolor="black")
-
-axins2.set_xlim(50, 68)
-axins2.set_xticks(np.arange(50, 72, 8))
-axins2.set_ylim(0.4, 0.6)
-axins2.set_yticks(np.arange(0.4, 0.7, 0.1))
-axins2.grid(True)
-ax2.indicate_inset_zoom(axins2)
 
 ax1 = fig.add_subplot(grid[0, 2])
 # ==============
@@ -781,7 +791,7 @@ ax1.text(75, 1.01, r'$1\,\mu\mathrm{M}$',
                         edgecolor='none', alpha=0.1))
 """
 # Agregar la línea horizontal
-ax1.axhline(y=0.5, color='black', alpha=0.4, linestyle='--', linewidth=1, xmin=0.49, xmax=1)
+ax1.axhline(y=0.5, color='black', alpha=0.4, linestyle='--', linewidth=1, xmin=0, xmax=1)
 
 
 # En vez de meter "labels=..." a legend, hazlo así:
@@ -799,7 +809,10 @@ for i, old_lbl in enumerate(old_labels):
     )
 
 # 3) Reconstruimos la leyenda con los mismos 'handles' pero textos nuevos
-ax1.legend(handles, new_labels, loc='lower left')
+#ax1.legend(handles, new_labels, loc='lower left')
+ax1.legend(handles[::-1], new_labels[::-1], loc='lower left')
+
+
 
 # ==============
 axins1 = fig.add_axes([0.83, 0.66, 0.06, 0.18])

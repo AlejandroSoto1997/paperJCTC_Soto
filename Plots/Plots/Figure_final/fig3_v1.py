@@ -35,8 +35,13 @@ from scipy.interpolate import interp1d
 import scienceplots
 import matplotlib.colors as mcolors
 import matplotlib.cm as cm
-import matplotlib.lines as mlines
+import matplotlib.colors as mcolors
+import matplotlib.colorbar as mcolorbar
 from matplotlib.lines import Line2D
+import matplotlib.colors as mcolors
+import matplotlib.colorbar as mcolorbar
+import numpy as np
+
 
 
 plt.style.use(['science', 'no-latex', 'bright'])
@@ -944,15 +949,15 @@ ax4.scatter(
 
 
 # Configurar los ejes y apariencia
-ax4.set_xlabel('$n_{\mathrm{tail}}$', fontsize=12)
+ax4.set_xlabel('$n_{\mathrm{tail}}$', fontsize=14)
 ax4.set_xticks(np.arange(0, 17, 1))  # Especificar los ticks del eje x
-ax4.tick_params(axis='both', which='major', labelsize=10)
+ax4.tick_params(axis='both', which='major', labelsize=14)
 ax4.set_ylim(50, 70)
-ax4.set_ylabel('Melting temperature $T_{m}$ $(^{o}C)$', fontsize=12)
+ax4.set_ylabel('Melting temperature $T_{m}$ $(^{o}C)$', fontsize=14)
 #ax4.text(-0.04, 1.07, 'b)', transform=ax4.transAxes, fontsize=12, fontweight='bold', va='top', ha='right')
 
 
-labels = ["NUPACK","Experimental","Simulation"]
+labels = ["NUPACK","Experimental","oxDNA unbiased MD"]
 # Define los mismos nombres de las series que ya tienes
 legend_labels = labels  # Asegúrate de que esta lista tenga los textos correctos
 
@@ -970,8 +975,37 @@ legend_handles = [
 ]
 
 # Agrega la leyenda personalizada
-ax4.legend(handles=legend_handles, loc='lower left')
+ax4.legend(handles=legend_handles, loc='lower left',fontsize=14)
 
+colors_1 = [
+    "#549F8B", "#313695", "#3c59a6", "#4b7db8", "#659bc8",
+    "#83b9d8", "#a3d3e6", "#fffbb9", "#fee090", "#fdb567",
+    "#f67f4b", "#e34933", "#c01a27", "#c6171b", "#7f0d0b"
+]
+
+# Crear colormap y normalización
+cmap = mcolors.ListedColormap(colors_1)
+bounds = np.arange(len(colors_1) + 1)
+norm = mcolors.BoundaryNorm(bounds, cmap.N)
+
+# Crear el eje de la colorbar
+cbar_ax = fig.add_axes([0.91, 0.2, 0.025, 0.6])  # [left, bottom, width, height]
+
+# Crear la colorbar
+cb = mcolorbar.ColorbarBase(
+    cbar_ax,
+    cmap=cmap,
+    norm=norm,
+    ticks=np.arange(len(colors_1)) + 0.5
+)
+
+# Etiquetas
+labels = ["Y", "LS16", "LS12", "LS11", "LS10",
+          "LS9", "LS8", "LS7", "LS6", "LS5",
+          "LS4", "LS3", "LS2", "LS1", "LS0"]
+
+cb.ax.set_yticklabels(labels)
+cb.ax.tick_params(labelsize=10)
 #plt.tight_layout()
 plt.savefig('figure_4.png', dpi=400)
 plt.show()
