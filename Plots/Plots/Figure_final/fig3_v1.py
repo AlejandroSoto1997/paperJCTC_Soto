@@ -975,12 +975,12 @@ legend_handles = [
 ]
 
 # Agrega la leyenda personalizada
-ax4.legend(handles=legend_handles, loc='lower left',fontsize=14)
+ax4.legend(handles=legend_handles, loc='lower left',fontsize=12)
 
 colors_1 = [
-    "#549F8B", "#313695", "#3c59a6", "#4b7db8", "#659bc8",
+    "#313695", "#3c59a6", "#4b7db8", "#659bc8",
     "#83b9d8", "#a3d3e6", "#fffbb9", "#fee090", "#fdb567",
-    "#f67f4b", "#e34933", "#c01a27", "#c6171b", "#7f0d0b"
+    "#f67f4b", "#e34933", "#c01a27", "#c6171b", "#7f0d0b","#549F8B"
 ]
 
 # Crear colormap y normalización
@@ -1000,9 +1000,9 @@ cb = mcolorbar.ColorbarBase(
 )
 
 # Etiquetas
-labels = ["Y", "LS16", "LS12", "LS11", "LS10",
+labels = [ "LS16", "LS12", "LS11", "LS10",
           "LS9", "LS8", "LS7", "LS6", "LS5",
-          "LS4", "LS3", "LS2", "LS1", "LS0"]
+          "LS4", "LS3", "LS2", "LS1", "LS0","Y"]
 
 cb.ax.set_yticklabels(labels)
 cb.ax.tick_params(labelsize=10)

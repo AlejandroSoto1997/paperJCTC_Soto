@@ -189,7 +189,7 @@ ax2.set_xlabel('Temperature ($^{o}$C)', fontsize=12)
 ax2.set_ylabel('')
 
 ax2.set_ylabel(
-    r"a)Normalized absorbance @ 260 nm" + "\n" +
+    r"a)Normalized transmittance @ 260 nm" + "\n" +
     "b) $P\,(\mathrm{bound \,state})$" + "\n" +
     "c) Fraction bounded",
     fontsize=12
@@ -452,7 +452,10 @@ ax3.legend(
 """
 
 
-
+colors_1 = [
+"#313695", "#3c59a6", "#4b7db8", "#659bc8", "#83b9d8", "#a3d3e6", "#fffbb9", "#fee090", "#fdb567", "#f67f4b", "#e34933", "#c01a27", "#c6171b", "#7f0d0b"
+,"#549F8B"
+]
 
 # Crear el colormap categórico
 cmap = mcolors.ListedColormap(colors_1)
@@ -471,10 +474,10 @@ cb = mcolorbar.ColorbarBase(
 )
 
 # Asignar las etiquetas reales
-labels = ["Y",
+labels = [
     "LS16", "LS12", "LS11", "LS10",
     "LS9", "LS8", "LS7", "LS6", "LS5",
-    "LS4", "LS3", "LS2", "LS1", "LS0"
+    "LS4", "LS3", "LS2", "LS1", "LS0","Y"
 ]
 cb.ax.set_yticklabels(labels[::1])
 cb.ax.tick_params(labelsize=8)
@@ -484,21 +487,21 @@ ax3.text(-0.04, 1.09, 'b)', transform=ax3.transAxes, fontsize=12, fontweight='bo
 # Configuración del zoom
 axins = ax3.inset_axes([0.15, 0.1, 0.25, 0.25])  # (x0, y0, width, height) del panel secundario
 # Aplicar los colores a los plots
-axins.plot(df1["Temperature(C)"], df1["Fraction of bases unpaired at equilibrium"], color=colors_1[0])
-axins.plot(df4["Temperature(C)"], df4["Fraction of bases unpaired at equilibrium"], color=colors_1[1])
-axins.plot(df5["Temperature(C)"], df5["Fraction of bases unpaired at equilibrium"], color=colors_1[2])
-axins.plot(df6["Temperature(C)"], df6["Fraction of bases unpaired at equilibrium"], color=colors_1[3])
-axins.plot(df7["Temperature(C)"], df7["Fraction of bases unpaired at equilibrium"], color=colors_1[4])
-axins.plot(df8["Temperature(C)"], df8["Fraction of bases unpaired at equilibrium"], color=colors_1[5])
-axins.plot(df9["Temperature(C)"], df9["Fraction of bases unpaired at equilibrium"], color=colors_1[6])
-axins.plot(df10["Temperature(C)"], df10["Fraction of bases unpaired at equilibrium"], color=colors_1[7])
-axins.plot(df11["Temperature(C)"], df11["Fraction of bases unpaired at equilibrium"], color=colors_1[8])
-axins.plot(df12["Temperature(C)"], df12["Fraction of bases unpaired at equilibrium"], color=colors_1[9])
-axins.plot(df13["Temperature(C)"], df13["Fraction of bases unpaired at equilibrium"], color=colors_1[10])
-axins.plot(df14["Temperature(C)"], df14["Fraction of bases unpaired at equilibrium"], color=colors_1[11])
-axins.plot(df15["Temperature(C)"], df15["Fraction of bases unpaired at equilibrium"], color=colors_1[12])
-axins.plot(df16["Temperature(C)"], df16["Fraction of bases unpaired at equilibrium"], color=colors_1[13])
-axins.plot(df17["Temperature(C)"], df17["Fraction of bases unpaired at equilibrium"], color=colors_1[14])
+axins.plot(df1["Temperature(C)"], df1["Fraction of bases unpaired at equilibrium"], color=colors_1[14])
+axins.plot(df4["Temperature(C)"], df4["Fraction of bases unpaired at equilibrium"], color=colors_1[0])
+axins.plot(df5["Temperature(C)"], df5["Fraction of bases unpaired at equilibrium"], color=colors_1[1])
+axins.plot(df6["Temperature(C)"], df6["Fraction of bases unpaired at equilibrium"], color=colors_1[2])
+axins.plot(df7["Temperature(C)"], df7["Fraction of bases unpaired at equilibrium"], color=colors_1[3])
+axins.plot(df8["Temperature(C)"], df8["Fraction of bases unpaired at equilibrium"], color=colors_1[4])
+axins.plot(df9["Temperature(C)"], df9["Fraction of bases unpaired at equilibrium"], color=colors_1[5])
+axins.plot(df10["Temperature(C)"], df10["Fraction of bases unpaired at equilibrium"], color=colors_1[6])
+axins.plot(df11["Temperature(C)"], df11["Fraction of bases unpaired at equilibrium"], color=colors_1[7])
+axins.plot(df12["Temperature(C)"], df12["Fraction of bases unpaired at equilibrium"], color=colors_1[8])
+axins.plot(df13["Temperature(C)"], df13["Fraction of bases unpaired at equilibrium"], color=colors_1[9])
+axins.plot(df14["Temperature(C)"], df14["Fraction of bases unpaired at equilibrium"], color=colors_1[10])
+axins.plot(df15["Temperature(C)"], df15["Fraction of bases unpaired at equilibrium"], color=colors_1[11])
+axins.plot(df16["Temperature(C)"], df16["Fraction of bases unpaired at equilibrium"], color=colors_1[12])
+axins.plot(df17["Temperature(C)"], df17["Fraction of bases unpaired at equilibrium"], color=colors_1[13])
 
 
 axins.set_xlim(52, 65)
